@@ -70,12 +70,53 @@ for section_id in ["hero", "about", "how-we-work", "company-info", "location", "
 check("nav element present", "<nav" in html)
 check("nav has links to sections", re.search(r"<a[^>]+href=\"#[a-z-]+\"", html) is not None)
 check("skip-to-content link", "skip" in html.lower())
-# --- Placeholders clearly labeled ---
-check("contact placeholder labeled", "Add verified contact details" in html or "أضف بيانات التواصل" in html)
+# --- No placeholder / contact debt (negative checks) ---
+for bad in ["Add verified contact details", "أضف بيانات التواصل",
+            "TBD", "TODO", "placeholder", "Placeholder",
+            "coming soon", "Coming Soon", "قريباً",
+            "info@example", "example.com", "yourname", "your@email",
+            "xxx", "XXX", "N/A", "لا يوجد", "not available"]:
+    check(f"forbidden placeholder/debt string absent: {bad!r}",
+          bad not in html and bad not in css and bad not in readme,
+          f"found in {'html' if bad in html else 'css' if bad in css else 'readme'}")
+
+# --- No unverified response-time promise (review finding) ---
+response_time_res = [
+    re.compile(r"will\s+respond", re.I), re.compile(r"سنرد\s+عليك"),
+    re.compile(r"\b\d{1,2}\s*(?:-|\s*to\s*)?\s*\d{0,2}\s*(?:business\s+|working\s+|business)?(?:hours?|ساعات)", re.I),
+    re.compile(r"(?:within|خلال)\s+.{0,20}(?:hour|ساعة|يوم|day)", re.I),
+]
+for rx in response_time_res:
+    m = rx.search(html) or rx.search(readme)
+    check(f"unverified response-time claim absent ({rx.pattern!r})",
+          m is None,
+          f"found: {m.group(0)!r}" if m else "")
+for bad_cls in ["placeholder", "todo", "coming-soon", "lorem", "dummy", "stub"]:
+    check(f"old placeholder class absent: {bad_cls!r}",
+          not re.search(r'class="[^"]*\b' + bad_cls + r'\b[^"]*"', html, re.I),
+          "placeholder class still referenced")
+
+# --- Email CTA present (contact-debt replaced by real CTA) ---
+check("email CTA class in HTML", re.search(r'class="[^"]*\bcontact-email-btn\b[^"]*"', html) is not None)
+check("email CTA styled in CSS", ".contact-email-btn" in css)
+
+# --- Mobile header/footer style markers (Fix: robust narrow layout) ---
+check("mobile brand shrink rule (min-width: 0)", re.search(r"\.brand\s*\{[^}]*min-width:\s*0", css))
+check("brand-name single-line ellipsis rule",
+      re.search(r"\.brand-name\s*\{[^}]*white-space:\s*nowrap[^}]*text-overflow:\s*ellipsis", css, re.S) is not None
+      or (re.search(r"\.brand-name\s*\{[^}]*white-space:\s*nowrap", css, re.S) is not None
+          and "text-overflow: ellipsis" in css))
+check("logo keeps flex:none on mobile (no shrink/collision)", re.search(r"\.brand-logo\s*\{[^}]*flex:\s*none", css, re.S) is not None)
+check("lang-toggle does not shrink on mobile", re.search(r"#lang-toggle\s*\{[^}]*flex:\s*none", css, re.S) is not None)
+check("narrow footer company-name rule exists",
+      re.search(r'@media \(max-width:\s*560px\)\s*\{[^}]*\.footer-brand\s*\{[^}]*white-space:\s*nowrap', css, re.S) is not None)
+check("footer-brand prevents orphaned wrap (nowrap+ellipsis)",
+      re.search(r"\.footer-brand\s*\{[^}]*white-space:\s*nowrap", css, re.S) is not None
+      and re.search(r"\.footer-brand\s*>?\s*span\s*\{[^}]*text-overflow:\s*ellipsis", css, re.S) is not None)
 
 # --- Verified business email in contact section ---
 check("contact email exact address", 'Info@highlight-solutions.com' in html)
-check("contact email mailto link", re.search(r'<a\s+href="mailto:Info@highlight-solutions\.com"[^>]*>\s*Info@highlight-solutions\.com\s*</a>', html) is not None)
+check("contact email mailto link", re.search(r'<a\s[^>]*href="mailto:Info@highlight-solutions\.com"[^>]*>', html) is not None)
 
 # --- Location link to Google Maps ---
 check("Google Maps link present", "google.com/maps" in html or "maps.google" in html or "maps.app.goo.gl" in html)

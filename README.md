@@ -16,10 +16,15 @@ Intended domain: highlight-solutions.com (not deployed; no DNS changes made).
 - Status: Active
 - Location: Riyadh, Saudi Arabia (Google Maps)
 
-## Intentional placeholders
-Contact section contains clearly labeled placeholders ("Add verified contact details").
-Phone, email, logo, social links, and specific services are NOT invented — they must be
-added only after verification.
+## Contact
+The contact section links to the official verified email:
+Info@highlight-solutions.com. Phone, social links, and specific services remain absent
+until verified — they must be added only after verification.
+
+## Custom domain
+Deployment preparation exists for the custom domain highlight-solutions.com (CNAME file
+for GitHub Pages is present in the repo). No DNS changes have been made and the site has
+not been deployed or publicly verified — no HTTPS/live-URL claims yet.
 
 ## Run locally
     cd highlight-solutions-website
